@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Details - TVA Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .admin-container {
+            max-width: 1400px;
+            margin: 100px auto 30px auto;
+            padding: 0 15px;
+        }
+        .admin-section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+        }
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1030;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .client-details-section {
+            background: #f8f9fa;
+            padding: 18px;
+            border-radius: 8px;
+            margin-bottom: 18px;
+        }
+        .questions-container {
+            max-height: 600px;
+            overflow-y: auto;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            background: #fff;
+        }
+        .question-item {
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 12px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .question-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+        .question-item.compact {
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+        .question-number {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: #667eea;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        .question-content {
+            margin-left: 40px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: white;
+            padding: 18px;
+            border-radius: 8px;
+            text-align: center;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 0;
+        }
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.85rem;
+            margin-bottom: 0;
+        }
+        .badge {
+            font-size: 0.75em;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6c757d;
+        }
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #dee2e6;
+        }
+        .pagination {
+            margin-top: 20px;
+        }
+        .pagination-info {
+            font-size: 0.85rem;
+            color: #6c757d;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .pagination .page-item.active .page-link {
+            background-color: #667eea;
+            border-color: #667eea;
+        }
+        .pagination .page-link {
+            color: #667eea;
+            border: 1px solid #dee2e6;
+        }
+        .pagination .page-link:hover {
+            color: #5a67d8;
+            background-color: #e9ecef;
+            border-color: #dee2e6;
+        }
+        .pagination .page-item.disabled .page-link {
+            color: #6c757d;
+            background-color: #fff;
+            border-color: #dee2e6;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .question-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .question-actions .btn {
+            font-size: 0.75rem;
+            padding: 4px 10px;
+        }
+        .subscription-history {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .three-dots-btn {
+            background: none;
+            border: none;
+            font-size: 1rem;
+            padding: 0 5px;
+            color: #6c757d;
+            cursor: pointer;
+        }
+        .three-dots-btn:hover {
+            color: #495057;
+        }
+        .dropdown-menu {
+            font-size: 0.8rem;
+            min-width: 110px;
+        }
+        .question-text {
+            font-size: 0.9rem;
+            line-height: 1.4;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #333;
+        }
+        .answer-text {
+            font-size: 0.85rem;
+            line-height: 1.4;
+            color: #666;
+            background: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border-left: 3px solid #28a745;
+        }
+        .question-meta {
+            font-size: 0.75rem;
+            color: #888;
+            margin-top: 8px;
+        }
+        .search-box {
+            margin-bottom: 15px;
+        }
+        .questions-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .questions-count {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        .question-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+        /* Pulse animation for notifications */
+        .pulse {
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-robot me-2"></i>TVA- Admin
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="admin.html"><i class="fas fa-home me-1"></i> Dashboard</a>
+                <a class="nav-link" href="admin-clients.html"><i class="fas fa-users me-1"></i> Clients</a>
+                <a class="nav-link" href="admin-notifications.html">
+                    <i class="fas fa-bell me-1"></i> Notifications
+                    <span class="badge bg-danger ms-1" id="notificationBadge" style="display: none;">0</span>
+                </a>
+                <a class="nav-link" href="admin-question-requests.html"><i class="fas fa-comments me-1"></i> Question Requests</a>
+                <a class="nav-link" href="admin-subscriptions.html"><i class="fas fa-crown me-1"></i> Subscriptions</a>
+                <a class="nav-link" href="admin-logs.html"><i class="fas fa-history me-1"></i> System Logs</a>
+                <a class="nav-link" href="#" onclick="authService.logout()"><i class="fas fa-sign-out-alt me-1"></i> Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="admin-container">
+        <!-- Header Section -->
+        <div class="admin-section">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3><i class="fas fa-user me-2"></i>Client Details</h3>
+                    <p class="text-muted mb-0" id="clientHeaderDescription" style="font-size: 0.9rem;">Loading client information...</p>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-primary btn-sm" onclick="openAddQuestionModal()">
+                        <i class="fas fa-plus me-1"></i>Add Question
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="goBack()">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Clients
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Client Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="questionsUsed">0</div>
+                <div class="stat-label">Questions Used</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="userHitsUsed">0</div>
+                <div class="stat-label">User Hits Used</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="modificationsUsed">0</div>
+                <div class="stat-label">Modifications Used</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="daysRemaining">0</div>
+                <div class="stat-label">Days Remaining</div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Client Information Column -->
+            <div class="col-md-5">
+                <!-- Client Information -->
+                <div class="admin-section">
+                    <h5><i class="fas fa-info-circle me-2"></i>Client Information</h5>
+                    <div class="client-details-section">
+                        <table class="table table-sm table-borderless" id="clientInfoTable">
+                            <tbody>
+                                <tr><td colspan="2" class="text-center">Loading client information...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Subscription Information -->
+                <div class="admin-section">
+                    <h5><i class="fas fa-crown me-2"></i>Subscription Information</h5>
+                    <div class="client-details-section">
+                        <table class="table table-sm table-borderless" id="subscriptionInfoTable">
+                            <tbody>
+                                <tr><td colspan="2" class="text-center">Loading subscription information...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Subscription History -->
+                <div class="admin-section">
+                    <h5><i class="fas fa-history me-2"></i>Subscription History</h5>
+                    <div class="client-details-section subscription-history">
+                        <div id="subscriptionHistory">
+                            <div class="empty-state">
+                                <i class="fas fa-receipt"></i>
+                                <p class="mb-0" style="font-size: 0.9rem;">No subscription history</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Questions Column -->
+            <div class="col-md-7">
+                <!-- Questions Management -->
+                <div class="admin-section">
+                    <div class="questions-header">
+                        <h5><i class="fas fa-question-circle me-2"></i>Client Questions</h5>
+                        <div class="questions-count" id="questionsCount">0 questions</div>
+                    </div>
+                    
+                    <!-- Search Box -->
+                    <div class="search-box">
+                        <input type="text" id="questionSearch" class="form-control form-control-sm" placeholder="Search questions...">
+                    </div>
+                    
+                    <!-- Questions Container with Scroll -->
+                    <div class="questions-container" id="questionsContainer">
+                        <div id="questionsList">
+                            <div class="empty-state">
+                                <i class="fas fa-question-circle"></i>
+                                <h6>No Questions</h6>
+                                <p style="font-size: 0.9rem;">This client hasn't added any questions yet.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pagination Info -->
+                    <div class="pagination-info" id="paginationInfo">
+                        Showing 0 of 0 questions
+                    </div>
+
+                    <!-- Pagination for Questions -->
+                    <nav aria-label="Questions pagination" class="mt-3">
+                        <ul class="pagination justify-content-center pagination-sm" id="questionsPagination">
+                            <!-- Pagination will be generated here -->
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Question Modal -->
+    <div class="modal fade" id="addQuestionModal" tabindex="-1" aria-labelledby="addQuestionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addQuestionModalLabel">
+                        <i class="fas fa-plus me-2"></i>Add Question for Client
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addQuestionForm">
+                        <input type="hidden" id="addQuestionClientId">
+                        <div class="mb-3">
+                            <label for="newQuestion" class="form-label">Question</label>
+                            <input type="text" class="form-control" id="newQuestion" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="newAnswer" class="form-label">Answer</label>
+                            <textarea class="form-control" id="newAnswer" rows="4" required></textarea>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            This will count against the client's question limit: 
+                            <span id="questionLimitInfo">0/0</span> questions used.
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="addQuestionForClient()">
+                        <i class="fas fa-save me-2"></i>Add Question
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Question Modal -->
+    <div class="modal fade" id="editQuestionModal" tabindex="-1" aria-labelledby="editQuestionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editQuestionModalLabel">
+                        <i class="fas fa-edit me-2"></i>Edit Question
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editQuestionForm">
+                        <input type="hidden" id="editQuestionId">
+                        <input type="hidden" id="editQuestionClientId">
+                        <div class="mb-3">
+                            <label for="editQuestion" class="form-label">Question</label>
+                            <input type="text" class="form-control" id="editQuestion" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editAnswer" class="form-label">Answer</label>
+                            <textarea class="form-control" id="editAnswer" rows="4" required></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="updateQuestionForClient()">
+                        <i class="fas fa-save me-2"></i>Update Question
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Question Confirmation Modal -->
+    <div class="modal fade" id="deleteQuestionModal" tabindex="-1" aria-labelledby="deleteQuestionModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteQuestionModalLabel">
+                        <i class="fas fa-trash me-2"></i>Delete Question
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this question?</p>
+                    <div class="question-preview bg-light p-3 rounded">
+                        <strong id="deleteQuestionPreview"></strong>
+                    </div>
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        This action cannot be undone. The question will be permanently deleted.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteButton" onclick="confirmDeleteQuestion()">
+                        <i class="fas fa-trash me-2"></i>Delete Question
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../scripts/auth.js"></script>
+    <script>
+        let clientDetails = null;
+        let clientQuestions = [];
+        let filteredQuestions = [];
+        let currentQuestionPage = 1;
+        const questionsPerPage = 15;
+        let currentDeleteQuestionId = null;
+        let notificationCheckInterval = null;
+
+        // Get client ID from URL
+        function getClientIdFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('id');
+        }
+
+        // Load client details when page loads
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Check if user is admin
+            if (authService.getUserType() !== 'admin') {
+                alert('Access denied. Admin privileges required.');
+                window.location.href = 'dashboard.html';
+                return;
+            }
+            
+            const clientId = getClientIdFromUrl();
+            if (!clientId) {
+                showNotification('Client ID not found in URL', 'error');
+                window.location.href = 'admin-clients.html';
+                return;
+            }
+            
+            await loadClientDetails(clientId);
+            await loadClientQuestions(clientId);
+            setupSearch();
+            
+            // Start notification polling
+            startNotificationPolling();
+        });
+
+        // Start polling for notifications every 15 seconds
+        function startNotificationPolling() {
+            checkUnreadNotifications();
+            notificationCheckInterval = setInterval(checkUnreadNotifications, 15000); // 15 seconds
+        }
+
+        // Check for unread notifications
+        async function checkUnreadNotifications() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/notifications/unread-count`, {
+                    headers: authService.getAuthHeaders()
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const unreadCount = data.unread_count || 0;
+                    const notificationBadge = document.getElementById('notificationBadge');
+                    
+                    if (unreadCount > 0) {
+                        notificationBadge.textContent = unreadCount;
+                        notificationBadge.style.display = 'inline';
+                        // Add pulse animation for new notifications
+                        notificationBadge.classList.add('pulse');
+                    } else {
+                        notificationBadge.style.display = 'none';
+                        notificationBadge.classList.remove('pulse');
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking notifications:', error);
+            }
+        }
+
+        function setupSearch() {
+            document.getElementById('questionSearch').addEventListener('input', function(e) {
+                const query = e.target.value.toLowerCase();
+                searchQuestions(query);
+            });
+        }
+
+        function searchQuestions(query) {
+            if (!query.trim()) {
+                filteredQuestions = [...clientQuestions];
+            } else {
+                filteredQuestions = clientQuestions.filter(question => 
+                    question.question.toLowerCase().includes(query) ||
+                    question.answer.toLowerCase().includes(query)
+                );
+            }
+            currentQuestionPage = 1;
+            displayQuestions(filteredQuestions);
+            setupQuestionsPagination(filteredQuestions.length);
+        }
+
+        async function loadClientDetails(clientId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/clients/${clientId}`, {
+                    headers: authService.getAuthHeaders()
+                });
+                
+                if (response.ok) {
+                    clientDetails = await response.json();
+                    displayClientDetails(clientDetails);
+                    displaySubscriptionHistory(clientDetails);
+                    updateStatistics(clientDetails.client_info);
+                } else {
+                    throw new Error('Failed to load client details');
+                }
+            } catch (error) {
+                console.error('Error loading client details:', error);
+                showNotification('Error loading client details: ' + error.message, 'error');
+                window.location.href = 'admin-clients.html';
+            }
+        }
+
+        function displayClientDetails(details) {
+            const client = details.client_info;
+            
+            // Update header
+            document.getElementById('clientHeaderDescription').textContent = `Managing client: ${client.name}`;
+            
+            // Display client information
+            document.getElementById('clientInfoTable').innerHTML = `
+                <tr><th>Name:</th><td>${escapeHtml(client.name)}</td></tr>
+                <tr><th>Email:</th><td>${escapeHtml(client.email)}</td></tr>
+                <tr><th>Mobile:</th><td>${escapeHtml(client.mobile || 'N/A')}</td></tr>
+                <tr><th>Website:</th><td>
+                    <a href="${client.website.startsWith('http') ? client.website : 'https://' + client.website}" 
+                       target="_blank" class="text-decoration-none">
+                        <i class="fas fa-external-link-alt me-1"></i>
+                        ${client.website}
+                    </a>
+                </td></tr>
+                <tr><th>Business Type:</th><td>${escapeHtml(client.business_type || 'N/A')}</td></tr>
+                <tr><th>Location:</th><td>${escapeHtml(client.location || 'N/A')}</td></tr>
+                <tr><th>PAN:</th><td>${escapeHtml(client.pan || 'N/A')}</td></tr>
+                <tr><th>TAN:</th><td>${escapeHtml(client.tan || 'N/A')}</td></tr>
+                <tr><th>Account Created:</th><td>${new Date(client.created_at).toLocaleString()}</td></tr>
+                <tr><th>Account Status:</th><td>
+                    <span class="badge ${client.is_active ? 'bg-success' : 'bg-danger'}">
+                        ${client.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                </td></tr>
+            `;
+            
+            // Display subscription information
+            const isExpired = new Date(client.subscription_end) < new Date();
+            document.getElementById('subscriptionInfoTable').innerHTML = `
+                <tr><th>Plan:</th><td><span class="badge ${client.subscription_plan === 'trial' ? 'bg-secondary' : 'bg-success'}">${client.subscription_plan}</span></td></tr>
+                <tr><th>Status:</th><td><span class="badge ${isExpired ? 'bg-danger' : 'bg-success'}">${isExpired ? 'Expired' : 'Active'}</span></td></tr>
+                <tr><th>Start Date:</th><td>${new Date(client.subscription_start).toLocaleDateString()}</td></tr>
+                <tr><th>End Date:</th><td>${new Date(client.subscription_end).toLocaleDateString()}</td></tr>
+                <tr><th>Questions:</th><td>${client.questions_used}/${client.questions_allowed}</td></tr>
+                <tr><th>User Hits:</th><td>${client.user_hits_used || 0}/${client.user_hits_allowed || 0}</td></tr>
+                <tr><th>Modifications:</th><td>${client.modifications_used || 0}</td></tr>
+            `;
+        }
+
+        function displaySubscriptionHistory(details) {
+            const subscriptions = details.subscriptions;
+            
+            if (subscriptions.length === 0) {
+                document.getElementById('subscriptionHistory').innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-receipt"></i>
+                        <p class="mb-0" style="font-size: 0.9rem;">No subscription history</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            document.getElementById('subscriptionHistory').innerHTML = `
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Plan</th>
+                                <th>Amount</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Payment ID</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${subscriptions.map(sub => `
+                                <tr>
+                                    <td><span class="badge bg-info">${sub.plan}</span></td>
+                                    <td>₹${(sub.amount / 100).toFixed(2)}</td>
+                                    <td>${new Date(sub.start_date).toLocaleDateString()}</td>
+                                    <td>${new Date(sub.end_date).toLocaleDateString()}</td>
+                                    <td><small class="text-muted">${sub.razorpay_payment_id || 'N/A'}</small></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function updateStatistics(client) {
+            document.getElementById('questionsUsed').textContent = `${client.questions_used}/${client.questions_allowed}`;
+            document.getElementById('userHitsUsed').textContent = `${client.user_hits_used || 0}/${client.user_hits_allowed || 0}`;
+            document.getElementById('modificationsUsed').textContent = client.modifications_used || 0;
+            
+            const daysRemaining = Math.max(0, Math.ceil((new Date(client.subscription_end) - new Date()) / (1000 * 60 * 60 * 24)));
+            document.getElementById('daysRemaining').textContent = daysRemaining;
+        }
+
+        async function loadClientQuestions(clientId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/questions`, {
+                    headers: authService.getAuthHeaders()
+                });
+                
+                if (response.ok) {
+                    const allQuestions = await response.json();
+                    // Filter questions for this specific client
+                    clientQuestions = allQuestions.filter(q => q.client_id === clientId);
+                    filteredQuestions = [...clientQuestions];
+                    displayQuestions(filteredQuestions);
+                    setupQuestionsPagination(filteredQuestions.length);
+                }
+            } catch (error) {
+                console.error('Error loading client questions:', error);
+            }
+        }
+
+        function displayQuestions(questionsToDisplay) {
+            const questionsList = document.getElementById('questionsList');
+            const questionsCount = document.getElementById('questionsCount');
+            
+            questionsCount.textContent = `${questionsToDisplay.length} question${questionsToDisplay.length !== 1 ? 's' : ''}`;
+            
+            if (questionsToDisplay.length === 0) {
+                questionsList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-question-circle"></i>
+                        <h6>No Questions Found</h6>
+                        <p style="font-size: 0.9rem;">${clientQuestions.length === 0 ? 'This client hasn\'t added any questions yet.' : 'No questions match your search criteria.'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Calculate pagination
+            const startIndex = (currentQuestionPage - 1) * questionsPerPage;
+            const endIndex = startIndex + questionsPerPage;
+            const paginatedQuestions = questionsToDisplay.slice(startIndex, endIndex);
+
+            questionsList.innerHTML = paginatedQuestions.map((question, index) => {
+                const questionNumber = startIndex + index + 1;
+                return `
+                <div class="question-item">
+                    <div class="question-number">${questionNumber}</div>
+                    <div class="question-content">
+                        <div class="question-item-header">
+                            <div class="question-text">${escapeHtml(question.question)}</div>
+                            <div class="dropdown">
+                                <button class="three-dots-btn" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="openEditQuestionModal('${question._id}')"><i class="fas fa-edit me-2"></i>Edit</a></li>
+                                    <li><a class="dropdown-item text-danger" href="#" onclick="openDeleteQuestionModal('${question._id}', '${escapeHtml(question.question)}')"><i class="fas fa-trash me-2"></i>Delete</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="answer-text">${escapeHtml(question.answer)}</div>
+                        <div class="question-meta">
+                            <small>Created: ${new Date(question.created_at).toLocaleDateString()}</small>
+                            ${question.updated_at ? `<small class="ms-2">Updated: ${new Date(question.updated_at).toLocaleDateString()}</small>` : ''}
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+            
+            // Update pagination info
+            setupQuestionsPagination(questionsToDisplay.length);
+        }
+
+        function setupQuestionsPagination(totalQuestions) {
+            const totalPages = Math.ceil(totalQuestions / questionsPerPage);
+            const pagination = document.getElementById('questionsPagination');
+            const paginationInfo = document.getElementById('paginationInfo');
+            
+            // Update pagination info
+            const startIndex = (currentQuestionPage - 1) * questionsPerPage + 1;
+            const endIndex = Math.min(startIndex + questionsPerPage - 1, totalQuestions);
+            
+            if (totalQuestions === 0) {
+                paginationInfo.textContent = 'Showing 0 of 0 questions';
+            } else {
+                paginationInfo.textContent = `Showing ${startIndex}-${endIndex} of ${totalQuestions} questions`;
+            }
+            
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+
+            let paginationHTML = '';
+            
+            // Previous button
+            paginationHTML += `
+                <li class="page-item ${currentQuestionPage === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="changeQuestionPage(${currentQuestionPage - 1})" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            `;
+            
+            // Page numbers - show max 5 pages with ellipsis
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentQuestionPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+            
+            // Adjust start page if we're near the end
+            if (endPage - startPage + 1 < maxVisiblePages) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+            
+            // First page and ellipsis
+            if (startPage > 1) {
+                paginationHTML += `
+                    <li class="page-item ${1 === currentQuestionPage ? 'active' : ''}">
+                        <a class="page-link" href="#" onclick="changeQuestionPage(1)">1</a>
+                    </li>
+                `;
+                if (startPage > 2) {
+                    paginationHTML += `
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                    `;
+                }
+            }
+            
+            // Page numbers
+            for (let i = startPage; i <= endPage; i++) {
+                paginationHTML += `
+                    <li class="page-item ${i === currentQuestionPage ? 'active' : ''}">
+                        <a class="page-link" href="#" onclick="changeQuestionPage(${i})">${i}</a>
+                    </li>
+                `;
+            }
+            
+            // Last page and ellipsis
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    paginationHTML += `
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                    `;
+                }
+                paginationHTML += `
+                    <li class="page-item ${totalPages === currentQuestionPage ? 'active' : ''}">
+                        <a class="page-link" href="#" onclick="changeQuestionPage(${totalPages})">${totalPages}</a>
+                    </li>
+                `;
+            }
+            
+            // Next button
+            paginationHTML += `
+                <li class="page-item ${currentQuestionPage === totalPages ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="changeQuestionPage(${currentQuestionPage + 1})" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            `;
+            
+            pagination.innerHTML = paginationHTML;
+        }
+
+        function changeQuestionPage(page) {
+            currentQuestionPage = page;
+            displayQuestions(filteredQuestions);
+            setupQuestionsPagination(filteredQuestions.length);
+            // Scroll to top of questions container
+            document.getElementById('questionsContainer').scrollTop = 0;
+        }
+
+        // Modal functions
+        function openAddQuestionModal() {
+            if (!clientDetails) return;
+            
+            const clientId = getClientIdFromUrl();
+            document.getElementById('addQuestionClientId').value = clientId;
+            
+            const clientInfo = clientDetails.client_info;
+            document.getElementById('questionLimitInfo').textContent = 
+                `${clientInfo.questions_used}/${clientInfo.questions_allowed}`;
+            
+            const modal = new bootstrap.Modal(document.getElementById('addQuestionModal'));
+            modal.show();
+        }
+
+        async function openEditQuestionModal(questionId) {
+            const question = clientQuestions.find(q => q._id === questionId);
+            if (!question) return;
+
+            document.getElementById('editQuestionId').value = questionId;
+            document.getElementById('editQuestionClientId').value = getClientIdFromUrl();
+            document.getElementById('editQuestion').value = question.question;
+            document.getElementById('editAnswer').value = question.answer;
+
+            const modal = new bootstrap.Modal(document.getElementById('editQuestionModal'));
+            modal.show();
+        }
+
+        function openDeleteQuestionModal(questionId, questionText) {
+            currentDeleteQuestionId = questionId;
+            document.getElementById('deleteQuestionPreview').textContent = questionText;
+
+            const modal = new bootstrap.Modal(document.getElementById('deleteQuestionModal'));
+            modal.show();
+        }
+
+        // Question management functions
+        async function addQuestionForClient() {
+            const clientId = document.getElementById('addQuestionClientId').value;
+            const question = document.getElementById('newQuestion').value.trim();
+            const answer = document.getElementById('newAnswer').value.trim();
+
+            if (!question || !answer) {
+                showNotification('Please fill both question and answer fields', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/questions`, {
+                    method: 'POST',
+                    headers: authService.getAuthHeaders(),
+                    body: JSON.stringify({
+                        client_id: clientId,
+                        question: question,
+                        answer: answer
+                    })
+                });
+
+                if (response.ok) {
+                    showNotification('Question added successfully!', 'success');
+                    
+                    // Close modal and reset form
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addQuestionModal'));
+                    modal.hide();
+                    document.getElementById('addQuestionForm').reset();
+                    
+                    // Reload client details and questions
+                    await loadClientDetails(clientId);
+                    await loadClientQuestions(clientId);
+                } else {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to add question');
+                }
+            } catch (error) {
+                console.error('Error adding question:', error);
+                showNotification('Error: ' + error.message, 'error');
+            }
+        }
+
+        async function updateQuestionForClient() {
+            const questionId = document.getElementById('editQuestionId').value;
+            const question = document.getElementById('editQuestion').value.trim();
+            const answer = document.getElementById('editAnswer').value.trim();
+
+            if (!question || !answer) {
+                showNotification('Please fill both question and answer fields', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/questions/${questionId}`, {
+                    method: 'PUT',
+                    headers: authService.getAuthHeaders(),
+                    body: JSON.stringify({
+                        question: question,
+                        answer: answer
+                    })
+                });
+
+                if (response.ok) {
+                    showNotification('Question updated successfully!', 'success');
+                    
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editQuestionModal'));
+                    modal.hide();
+                    
+                    // Reload questions
+                    const clientId = getClientIdFromUrl();
+                    await loadClientQuestions(clientId);
+                } else {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to update question');
+                }
+            } catch (error) {
+                console.error('Error updating question:', error);
+                showNotification('Error: ' + error.message, 'error');
+            }
+        }
+
+        async function confirmDeleteQuestion() {
+            if (!currentDeleteQuestionId) return;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/questions/${currentDeleteQuestionId}`, {
+                    method: 'DELETE',
+                    headers: authService.getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    showNotification('Question deleted successfully!', 'success');
+                    
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('deleteQuestionModal'));
+                    modal.hide();
+                    
+                    // Reset state
+                    currentDeleteQuestionId = null;
+                    
+                    // Reload client details and questions
+                    const clientId = getClientIdFromUrl();
+                    await loadClientDetails(clientId);
+                    await loadClientQuestions(clientId);
+                } else {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to delete question');
+                }
+            } catch (error) {
+                console.error('Error deleting question:', error);
+                showNotification('Error: ' + error.message, 'error');
+            }
+        }
+
+        function goBack() {
+            window.location.href = 'admin-clients.html';
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
+            notification.style.cssText = `
+                position: fixed;
+                top: 80px;
+                right: 20px;
+                z-index: 1000;
+                min-width: 300px;
+            `;
+            notification.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Clean up interval when page unloads
+        window.addEventListener('beforeunload', function() {
+            if (notificationCheckInterval) {
+                clearInterval(notificationCheckInterval);
+            }
+        });
+    </script>
+</body>
+</html>

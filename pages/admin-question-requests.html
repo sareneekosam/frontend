@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Question Requests - TVA Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .admin-container {
+            max-width: 1400px;
+            margin: 100px auto 30px auto;
+            padding: 0 15px;
+        }
+        .admin-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .table th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1030;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .badge {
+            font-size: 0.75em;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: #dee2e6;
+        }
+        .pagination {
+            margin-top: 20px;
+        }
+        .question-text {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .client-row {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .client-row:hover {
+            background-color: #f8f9fa;
+        }
+        .back-button {
+            margin-bottom: 20px;
+        }
+        .status-filter {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-robot me-2"></i>TVA- Admin
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="admin.html"><i class="fas fa-home me-1"></i> Dashboard</a>
+                <a class="nav-link" href="admin-clients.html"><i class="fas fa-users me-1"></i> Clients</a>
+                <a class="nav-link" href="admin-notifications.html"><i class="fas fa-bell me-1"></i> Notifications</a>
+                <a class="nav-link active" href="admin-question-requests.html"><i class="fas fa-comments me-1"></i> Question Requests</a>
+                <a class="nav-link" href="admin-subscriptions.html"><i class="fas fa-crown me-1"></i> Subscriptions</a>
+                <a class="nav-link" href="admin-logs.html"><i class="fas fa-history me-1"></i> System Logs</a>
+                <a class="nav-link" href="#" onclick="authService.logout()"><i class="fas fa-sign-out-alt me-1"></i> Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="admin-container">
+        <!-- Header Section -->
+        <div class="admin-section">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1><i class="fas fa-comments me-2"></i>Question Requests</h1>
+                    <p class="text-muted mb-0" id="pageDescription">View clients with question requests</p>
+                </div>
+                <!-- Status Filter (will be shown only when viewing client requests) -->
+                <div class="btn-group" id="statusFilter" style="display: none;">
+                    <button class="btn btn-sm btn-outline-primary active" onclick="setStatusFilter('pending')">
+                        Pending
+                    </button>
+                    <button class="btn btn-sm btn-outline-success" onclick="setStatusFilter('approved')">
+                        Approved
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="setStatusFilter('rejected')">
+                        Rejected
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="setStatusFilter('all')">
+                        All
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Back Button (shown when viewing client requests) -->
+        <div class="back-button" id="backButtonContainer" style="display: none;">
+            <button class="btn btn-outline-secondary" onclick="showClientList()">
+                <i class="fas fa-arrow-left me-2"></i>Back to Clients List
+            </button>
+        </div>
+
+        <!-- Clients List Section -->
+        <div class="admin-section" id="clientsSection">
+            <h4><i class="fas fa-users me-2"></i>Clients with Question Requests</h4>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Client Name</th>
+                            <th>Email</th>
+                            <th>Website</th>
+                            <th>Total Requests</th>
+                            <th>Pending</th>
+                            <th>Approved</th>
+                            <th>Rejected</th>
+                            <th>Last Request</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clientsList">
+                        <tr>
+                            <td colspan="9" class="text-center">Loading clients with question requests...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Client Requests Section -->
+        <div class="admin-section" id="clientRequestsSection" style="display: none;">
+            <h4><i class="fas fa-comments me-2"></i>Question Requests for <span id="clientNameHeader"></span></h4>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Question</th>
+                            <th>Answer</th>
+                            <th>Asked Count</th>
+                            <th>Status</th>
+                            <th>Submitted</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clientRequestsList">
+                        <tr>
+                            <td colspan="7" class="text-center">Loading question requests...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <nav aria-label="Question requests pagination">
+                <ul class="pagination justify-content-center" id="clientRequestsPagination">
+                    <!-- Pagination will be generated here -->
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Request Details Modal -->
+    <div class="modal fade" id="requestDetailsModal" tabindex="-1" aria-labelledby="requestDetailsModalLabel">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="requestDetailsModalLabel">
+                        <i class="fas fa-comments me-2"></i>Question Request Details
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="requestDetailsContent">
+                    <!-- Content loaded dynamically -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <div id="requestActions">
+                        <!-- Action buttons will be added here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../scripts/auth.js"></script>
+    <script>
+        let allClients = [];
+        let allQuestionRequests = [];
+        let currentPage = 1;
+        const requestsPerPage = 10;
+        let currentStatus = 'pending';
+        let currentClientId = null;
+        let currentClientName = '';
+
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Check if user is admin
+            if (authService.getUserType() !== 'admin') {
+                alert('Access denied. Admin privileges required.');
+                window.location.href = 'dashboard.html';
+                return;
+            }
+            
+            await loadAllData();
+            displayClientsWithRequests();
+        });
+
+        async function loadAllData() {
+            try {
+                // Load all clients
+                const clientsResponse = await fetch(`${API_BASE_URL}/admin/clients`, {
+                    headers: authService.getAuthHeaders()
+                });
+                
+                if (clientsResponse.ok) {
+                    allClients = await clientsResponse.json();
+                }
+
+                // Load all question requests
+                const requestsResponse = await fetch(`${API_BASE_URL}/admin/question-requests?status=all`, {
+                    headers: authService.getAuthHeaders()
+                });
+                
+                if (requestsResponse.ok) {
+                    allQuestionRequests = await requestsResponse.json();
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showNotification('Error loading data', 'error');
+            }
+        }
+
+        function displayClientsWithRequests() {
+            const clientsList = document.getElementById('clientsList');
+            document.getElementById('clientsSection').style.display = 'block';
+            document.getElementById('clientRequestsSection').style.display = 'none';
+            document.getElementById('backButtonContainer').style.display = 'none';
+            document.getElementById('statusFilter').style.display = 'none';
+            document.getElementById('pageDescription').textContent = 'View clients with question requests';
+
+            // Calculate request counts for each client
+            const clientsWithRequests = allClients.map(client => {
+                const clientRequests = allQuestionRequests.filter(req => req.client_id === client._id);
+                const pendingRequests = clientRequests.filter(req => req.status === 'pending').length;
+                const approvedRequests = clientRequests.filter(req => req.status === 'approved').length;
+                const rejectedRequests = clientRequests.filter(req => req.status === 'rejected').length;
+                const totalRequests = clientRequests.length;
+                
+                // Find latest request date
+                const latestRequest = clientRequests.length > 0 
+                    ? new Date(Math.max(...clientRequests.map(req => new Date(req.created_at))))
+                    : null;
+
+                return {
+                    ...client,
+                    totalRequests,
+                    pendingRequests,
+                    approvedRequests,
+                    rejectedRequests,
+                    latestRequest
+                };
+            }).filter(client => client.totalRequests > 0); // Only show clients with requests
+
+            if (clientsWithRequests.length === 0) {
+                clientsList.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="text-center">
+                            <div class="empty-state">
+                                <i class="fas fa-comments"></i>
+                                <h4>No Question Requests</h4>
+                                <p>No clients with question requests found.</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            clientsList.innerHTML = clientsWithRequests.map(client => `
+                <tr class="client-row">
+                    <td>${client.name || 'Unknown Client'}</td>
+                    <td>${client.email}</td>
+                    <td>${client.website || 'N/A'}</td>
+                    <td><span class="badge bg-primary">${client.totalRequests}</span></td>
+                    <td><span class="badge bg-warning">${client.pendingRequests}</span></td>
+                    <td><span class="badge bg-success">${client.approvedRequests}</span></td>
+                    <td><span class="badge bg-danger">${client.rejectedRequests}</span></td>
+                    <td>
+                        ${client.latestRequest ? `
+                            <small>${client.latestRequest.toLocaleDateString()}</small>
+                        ` : 'N/A'}
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="viewClientRequests('${client._id}', '${client.name}')">
+                            <i class="fas fa-eye me-1"></i>View Requests
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function viewClientRequests(clientId, clientName) {
+            currentClientId = clientId;
+            currentClientName = clientName;
+            
+            document.getElementById('clientsSection').style.display = 'none';
+            document.getElementById('clientRequestsSection').style.display = 'block';
+            document.getElementById('backButtonContainer').style.display = 'block';
+            document.getElementById('statusFilter').style.display = 'flex';
+            document.getElementById('clientNameHeader').textContent = clientName;
+            document.getElementById('pageDescription').textContent = `Viewing question requests for ${clientName}`;
+
+            displayClientRequests();
+        }
+
+        function showClientList() {
+            currentClientId = null;
+            currentClientName = '';
+            displayClientsWithRequests();
+        }
+
+        function displayClientRequests() {
+            const clientRequestsList = document.getElementById('clientRequestsList');
+            
+            if (!currentClientId) return;
+
+            // Filter requests for current client and by status
+            let filteredRequests = allQuestionRequests.filter(req => req.client_id === currentClientId);
+            
+            if (currentStatus !== 'all') {
+                filteredRequests = filteredRequests.filter(req => req.status === currentStatus);
+            }
+
+            if (filteredRequests.length === 0) {
+                clientRequestsList.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center">
+                            <div class="empty-state">
+                                <i class="fas fa-comments"></i>
+                                <h4>No Question Requests</h4>
+                                <p>No ${currentStatus} question requests found for this client.</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                document.getElementById('clientRequestsPagination').innerHTML = '';
+                return;
+            }
+
+            // Sort by creation date (newest first)
+            filteredRequests.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+            // Calculate pagination
+            const startIndex = (currentPage - 1) * requestsPerPage;
+            const endIndex = startIndex + requestsPerPage;
+            const paginatedRequests = filteredRequests.slice(startIndex, endIndex);
+
+            clientRequestsList.innerHTML = paginatedRequests.map(request => `
+                <tr>
+                    <td>
+                        <span class="badge ${getRequestTypeBadge(request.request_type)}">
+                            ${request.request_type}
+                        </span>
+                    </td>
+                    <td class="question-text" title="${request.question || 'N/A'}">
+                        ${request.question || 'N/A'}
+                    </td>
+                    <td class="question-text" title="${request.answer || 'N/A'}">
+                        ${request.answer ? (request.answer.substring(0, 100) + (request.answer.length > 100 ? '...' : '')) : 'N/A'}
+                    </td>
+                    <td>${request.asked_count || 0}</td>
+                    <td>
+                        <span class="badge ${getRequestStatusBadge(request.status)}">
+                            ${request.status}
+                        </span>
+                    </td>
+                    <td>
+                        <small>${new Date(request.created_at).toLocaleDateString()}</small>
+                        <br>
+                        <small class="text-muted">${new Date(request.created_at).toLocaleTimeString()}</small>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-info" onclick="viewRequestDetails('${request._id}')">
+                            <i class="fas fa-eye me-1"></i>View
+                        </button>
+                        ${request.status === 'pending' ? `
+                        <button class="btn btn-sm btn-success" onclick="processRequest('${request._id}', 'approved')">
+                            <i class="fas fa-check me-1"></i>Approve
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="processRequest('${request._id}', 'rejected')">
+                            <i class="fas fa-times me-1"></i>Reject
+                        </button>
+                        ` : ''}
+                    </td>
+                </tr>
+            `).join('');
+
+            setupClientRequestsPagination(filteredRequests.length);
+        }
+
+        function setupClientRequestsPagination(totalRequests) {
+            const totalPages = Math.ceil(totalRequests / requestsPerPage);
+            const pagination = document.getElementById('clientRequestsPagination');
+            
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+
+            let paginationHTML = '';
+            
+            // Previous button
+            paginationHTML += `
+                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="changeClientRequestsPage(${currentPage - 1})">Previous</a>
+                </li>
+            `;
+            
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                paginationHTML += `
+                    <li class="page-item ${i === currentPage ? 'active' : ''}">
+                        <a class="page-link" href="#" onclick="changeClientRequestsPage(${i})">${i}</a>
+                    </li>
+                `;
+            }
+            
+            // Next button
+            paginationHTML += `
+                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="changeClientRequestsPage(${currentPage + 1})">Next</a>
+                </li>
+            `;
+            
+            pagination.innerHTML = paginationHTML;
+        }
+
+        function changeClientRequestsPage(page) {
+            currentPage = page;
+            displayClientRequests();
+            // Scroll to top of table
+            document.getElementById('clientRequestsSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function setStatusFilter(status) {
+            currentStatus = status;
+            currentPage = 1;
+            
+            // Update active button
+            document.querySelectorAll('#statusFilter .btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            displayClientRequests();
+        }
+
+        function getRequestTypeBadge(type) {
+            const badges = {
+                'add': 'bg-primary',
+                'modify': 'bg-warning',
+                'delete': 'bg-danger'
+            };
+            return badges[type] || 'bg-secondary';
+        }
+
+        function getRequestStatusBadge(status) {
+            const badges = {
+                'pending': 'bg-warning',
+                'approved': 'bg-success',
+                'rejected': 'bg-danger'
+            };
+            return badges[status] || 'bg-secondary';
+        }
+
+        async function viewRequestDetails(requestId) {
+            const request = allQuestionRequests.find(req => req._id === requestId);
+            if (!request) return;
+
+            const modal = new bootstrap.Modal(document.getElementById('requestDetailsModal'));
+            
+            // Find client name
+            const client = allClients.find(c => c._id === request.client_id);
+            const clientName = client ? client.name : 'Unknown Client';
+
+            document.getElementById('requestDetailsModalLabel').textContent = 'Question Request Details';
+            
+            document.getElementById('requestDetailsContent').innerHTML = `
+                <div class="request-details">
+                    <h6><i class="fas fa-question-circle me-2"></i>Request Details</h6>
+                    <table class="table table-sm table-borderless">
+                        <tr><th>Client:</th><td>${clientName}</td></tr>
+                        <tr><th>Website:</th><td>${request.website || 'N/A'}</td></tr>
+                        <tr><th>Request Type:</th><td><span class="badge ${getRequestTypeBadge(request.request_type)}">${request.request_type}</span></td></tr>
+                        <tr><th>Status:</th><td><span class="badge ${getRequestStatusBadge(request.status)}">${request.status}</span></td></tr>
+                        <tr><th>Question:</th><td class="fw-bold">${request.question || 'N/A'}</td></tr>
+                        <tr><th>Answer:</th><td>${request.answer || 'N/A'}</td></tr>
+                        <tr><th>Asked Count:</th><td>${request.asked_count || 0}</td></tr>
+                        <tr><th>Submitted:</th><td>${new Date(request.created_at).toLocaleString()}</td></tr>
+                        ${request.admin_notes ? `<tr><th>Admin Notes:</th><td>${request.admin_notes}</td></tr>` : ''}
+                        ${request.processed_at ? `<tr><th>Processed At:</th><td>${new Date(request.processed_at).toLocaleString()}</td></tr>` : ''}
+                        ${request.processed_by ? `<tr><th>Processed By:</th><td>Admin</td></tr>` : ''}
+                    </table>
+                </div>
+            `;
+
+            // Add action buttons for pending requests
+            const requestActions = document.getElementById('requestActions');
+            if (request.status === 'pending') {
+                requestActions.innerHTML = `
+                    <button type="button" class="btn btn-success" onclick="processRequest('${request._id}', 'approved')">
+                        <i class="fas fa-check me-1"></i>Approve
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="processRequest('${request._id}', 'rejected')">
+                        <i class="fas fa-times me-1"></i>Reject
+                    </button>
+                `;
+            } else {
+                requestActions.innerHTML = '';
+            }
+            
+            modal.show();
+        }
+
+        async function processRequest(requestId, status) {
+            if (!confirm(`Are you sure you want to ${status} this request?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/question-requests/${requestId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...authService.getAuthHeaders()
+                    },
+                    body: JSON.stringify({
+                        status: status,
+                        admin_notes: `Request ${status} by admin`
+                    })
+                });
+
+                if (response.ok) {
+                    showNotification(`Request ${status} successfully`, 'success');
+                    
+                    // Reload all data
+                    await loadAllData();
+                    
+                    // Refresh current view
+                    if (currentClientId) {
+                        displayClientRequests();
+                    } else {
+                        displayClientsWithRequests();
+                    }
+                    
+                    // Close modal if open
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('requestDetailsModal'));
+                    if (modal) {
+                        modal.hide();
+                    }
+                } else {
+                    throw new Error('Failed to process request');
+                }
+            } catch (error) {
+                console.error('Error processing request:', error);
+                showNotification('Error processing request', 'error');
+            }
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
+            notification.style.cssText = `
+                position: fixed;
+                top: 80px;
+                right: 20px;
+                z-index: 1000;
+                min-width: 300px;
+            `;
+            notification.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
