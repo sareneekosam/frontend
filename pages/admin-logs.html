@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Logs - TVA Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <style>
+        .admin-container {
+            max-width: 1400px;
+            margin: 100px auto 30px auto;
+            padding: 0 15px;
+        }
+        .admin-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .table th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1030;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .badge {
+            font-size: 0.75em;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: #dee2e6;
+        }
+        .pagination {
+            margin-top: 20px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 0;
+        }
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-bottom: 0;
+        }
+        .log-details {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .website-link {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .filter-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-robot me-2"></i>TVA- Admin
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="admin.html"><i class="fas fa-home me-1"></i> Dashboard</a>
+                <a class="nav-link" href="admin-clients.html"><i class="fas fa-users me-1"></i> Clients</a>
+                <a class="nav-link" href="admin-notifications.html"><i class="fas fa-bell me-1"></i> Notifications</a>
+                <a class="nav-link" href="admin-question-requests.html"><i class="fas fa-comments me-1"></i> Question Requests</a>
+                <a class="nav-link" href="admin-subscriptions.html"><i class="fas fa-crown me-1"></i> Subscriptions</a>
+                <a class="nav-link active" href="admin-logs.html"><i class="fas fa-history me-1"></i> System Logs</a>
+                <a class="nav-link" href="#" onclick="authService.logout()"><i class="fas fa-sign-out-alt me-1"></i> Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="admin-container">
+        <!-- Header Section -->
+        <div class="admin-section">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1><i class="fas fa-history me-2"></i>System Logs</h1>
+                    <p class="text-muted mb-0">View system activity and audit logs</p>
+                </div>
+                <div>
+                    <button class="btn btn-sm btn-outline-primary" onclick="exportLogs()">
+                        <i class="fas fa-download me-2"></i>Export Logs
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalLogs">0</div>
+                <div class="stat-label">Total Logs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="todayLogs">0</div>
+                <div class="stat-label">Today's Logs</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="clientActions">0</div>
+                <div class="stat-label">Client Actions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="adminActions">0</div>
+                <div class="stat-label">Admin Actions</div>
+            </div>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="admin-section">
+            <h5><i class="fas fa-filter me-2"></i>Filters</h5>
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label for="actionTypeFilter" class="form-label">Action Type</label>
+                    <select class="form-control" id="actionTypeFilter" onchange="applyFilters()">
+                        <option value="all">All Actions</option>
+                        <option value="client_signup">Client Signup</option>
+                        <option value="admin_add_question">Admin Add Question</option>
+                        <option value="admin_update_question">Admin Update Question</option>
+                        <option value="admin_delete_question">Admin Delete Question</option>
+                        <option value="subscription_created">Subscription Created</option>
+                        <option value="create_question_request">Create Question Request</option>
+                        <option value="update_question_request">Update Question Request</option>
+                        <option value="admin_process_question_request">Process Question Request</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="userTypeFilter" class="form-label">User Type</label>
+                    <select class="form-control" id="userTypeFilter" onchange="applyFilters()">
+                        <option value="all">All Users</option>
+                        <option value="admin">Admin</option>
+                        <option value="client">Client</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="dateFromFilter" class="form-label">Date From</label>
+                    <input type="date" class="form-control" id="dateFromFilter" onchange="applyFilters()">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="dateToFilter" class="form-label">Date To</label>
+                    <input type="date" class="form-control" id="dateToFilter" onchange="applyFilters()">
+                </div>
+            </div>
+        </div>
+
+        <!-- Logs Table -->
+        <div class="admin-section">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Action</th>
+                            <th>User</th>
+                            <th>User Type</th>
+                            <th>Website</th>
+                            <th>Details</th>
+                            <th>Timestamp</th>
+                            <th>View</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logsList">
+                        <tr>
+                            <td colspan="7" class="text-center">Loading logs...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <nav aria-label="Logs pagination">
+                <ul class="pagination justify-content-center" id="logsPagination">
+                    <!-- Pagination will be generated here -->
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Log Details Modal -->
+    <div class="modal fade" id="logDetailsModal" tabindex="-1" aria-labelledby="logDetailsModalLabel">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="logDetailsModalLabel">
+                        <i class="fas fa-info-circle me-2"></i>Log Details
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="logDetailsContent">
+                    <!-- Content loaded dynamically -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../scripts/auth.js"></script>
+    <script>
+        let allLogs = [];
+        let filteredLogs = [];
+        let currentPage = 1;
+        const logsPerPage = 20;
+        let clientNameMap = {};
+        let clientWebsiteMap = {};
+
+        // Load logs when page loads
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Check if user is admin
+            if (authService.getUserType() !== 'admin') {
+                alert('Access denied. Admin privileges required.');
+                window.location.href = 'dashboard.html';
+                return;
+            }
+            
+            await loadClientMaps();
+            await loadLogs();
+        });
+
+        async function loadClientMaps() {
+            try {
+                const clientsResponse = await fetch(`${API_BASE_URL}/admin/clients`, {
+                    headers: authService.getAuthHeaders()
+                });
+                
+                if (clientsResponse.ok) {
+                    const clients = await clientsResponse.json();
+                    
+                    clientNameMap = {};
+                    clientWebsiteMap = {};
+                    
+                    clients.forEach(client => {
+                        clientNameMap[client._id] = client.name;
+                        clientNameMap[client.email] = client.name;
+                        clientWebsiteMap[client._id] = {
+                            website: client.website,
+                            name: client.name
+                        };
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading client maps:', error);
+            }
+        }
+
+        async function loadLogs() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/logs?limit=1000`, {
+                    headers: authService.getAuthHeaders()
+                });
+                
+                if (response.ok) {
+                    allLogs = await response.json();
+                    // Sort by timestamp, latest first
+                    allLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    filteredLogs = [...allLogs];
+                    applyFilters();
+                    await loadLogStats();
+                }
+            } catch (error) {
+                console.error('Error loading logs:', error);
+            }
+        }
+
+        async function loadLogStats() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const todayLogs = allLogs.filter(log => new Date(log.timestamp) >= today);
+            const clientActions = allLogs.filter(log => log.user_type === 'client').length;
+            const adminActions = allLogs.filter(log => log.user_type === 'admin').length;
+            
+            document.getElementById('totalLogs').textContent = allLogs.length;
+            document.getElementById('todayLogs').textContent = todayLogs.length;
+            document.getElementById('clientActions').textContent = clientActions;
+            document.getElementById('adminActions').textContent = adminActions;
+        }
+
+        function applyFilters() {
+            const actionType = document.getElementById('actionTypeFilter').value;
+            const userType = document.getElementById('userTypeFilter').value;
+            const dateFrom = document.getElementById('dateFromFilter').value;
+            const dateTo = document.getElementById('dateToFilter').value;
+            
+            filteredLogs = allLogs.filter(log => {
+                // Action type filter
+                if (actionType !== 'all' && log.action !== actionType) {
+                    return false;
+                }
+                
+                // User type filter
+                if (userType !== 'all' && log.user_type !== userType) {
+                    return false;
+                }
+                
+                // Date range filter
+                const logDate = new Date(log.timestamp);
+                if (dateFrom) {
+                    const fromDate = new Date(dateFrom);
+                    fromDate.setHours(0, 0, 0, 0);
+                    if (logDate < fromDate) {
+                        return false;
+                    }
+                }
+                
+                if (dateTo) {
+                    const toDate = new Date(dateTo);
+                    toDate.setHours(23, 59, 59, 999);
+                    if (logDate > toDate) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            });
+            
+            currentPage = 1;
+            displayLogs(filteredLogs);
+            setupPagination(filteredLogs.length);
+        }
+
+        function displayLogs(logsToDisplay) {
+            const logsList = document.getElementById('logsList');
+            
+            if (logsToDisplay.length === 0) {
+                logsList.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center">
+                            <div class="empty-state">
+                                <i class="fas fa-history"></i>
+                                <h4>No Logs Found</h4>
+                                <p>No logs match your filter criteria.</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // Calculate pagination
+            const startIndex = (currentPage - 1) * logsPerPage;
+            const endIndex = startIndex + logsPerPage;
+            const paginatedLogs = logsToDisplay.slice(startIndex, endIndex);
+
+            logsList.innerHTML = paginatedLogs.map(log => `
+                <tr>
+                    <td>
+                        <span class="badge ${getActionBadge(log.action)}">${formatAction(log.action)}</span>
+                    </td>
+                    <td>
+                        ${clientNameMap[log.user_id] || log.user_id}
+                    </td>
+                    <td>
+                        <span class="badge ${getUserTypeBadge(log.user_type)}">${log.user_type}</span>
+                    </td>
+                    <td>
+                        ${getWebsiteLink(log)}
+                    </td>
+                    <td class="log-details" title="${formatLogDetails(log.details)}">
+                        ${formatLogDetails(log.details)}
+                    </td>
+                    <td>
+                        <small>${new Date(log.timestamp).toLocaleString()}</small>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-info" onclick="viewLogDetails('${log._id}')">
+                            <i class="fas fa-eye me-1"></i>View
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function setupPagination(totalLogs) {
+            const totalPages = Math.ceil(totalLogs / logsPerPage);
+            const pagination = document.getElementById('logsPagination');
+            
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+
+            let paginationHTML = '';
+            
+            // Previous button
+            paginationHTML += `
+                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="changePage(${currentPage - 1})">Previous</a>
+                </li>
+            `;
+            
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                paginationHTML += `
+                    <li class="page-item ${i === currentPage ? 'active' : ''}">
+                        <a class="page-link" href="#" onclick="changePage(${i})">${i}</a>
+                    </li>
+                `;
+            }
+            
+            // Next button
+            paginationHTML += `
+                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="changePage(${currentPage + 1})">Next</a>
+                </li>
+            `;
+            
+            pagination.innerHTML = paginationHTML;
+        }
+
+        function changePage(page) {
+            currentPage = page;
+            displayLogs(filteredLogs);
+            setupPagination(filteredLogs.length);
+            // Scroll to top of table
+            document.querySelector('.admin-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function getWebsiteLink(log) {
+            if (!log.client_id) return '<span class="text-muted">N/A</span>';
+            
+            const clientInfo = clientWebsiteMap[log.client_id];
+            if (clientInfo && clientInfo.website) {
+                const website = clientInfo.website.startsWith('http') ? clientInfo.website : `https://${clientInfo.website}`;
+                return `
+                    <a href="${website}" target="_blank" class="text-decoration-none website-link">
+                        <i class="fas fa-external-link-alt me-1"></i>
+                        ${clientInfo.website}
+                    </a>
+                `;
+            }
+            return '<span class="text-muted">Unknown Website</span>';
+        }
+
+        function formatAction(action) {
+            const actionMap = {
+                'client_signup': 'Client Signup',
+                'admin_add_question': 'Admin Add Question',
+                'admin_update_question': 'Admin Update Question',
+                'admin_delete_question': 'Admin Delete Question',
+                'subscription_created': 'Subscription Created',
+                'create_question_request': 'Create Question Request',
+                'update_question_request': 'Update Question Request',
+                'admin_process_question_request': 'Process Question Request'
+            };
+            return actionMap[action] || action.replace(/_/g, ' ');
+        }
+
+        function getActionBadge(action) {
+            const badgeMap = {
+                'client_signup': 'bg-success',
+                'admin_add_question': 'bg-primary',
+                'admin_update_question': 'bg-warning',
+                'admin_delete_question': 'bg-danger',
+                'subscription_created': 'bg-success',
+                'create_question_request': 'bg-info',
+                'update_question_request': 'bg-warning',
+                'admin_process_question_request': 'bg-success'
+            };
+            return badgeMap[action] || 'bg-secondary';
+        }
+
+        function formatLogDetails(details) {
+            if (!details) return 'N/A';
+            
+            try {
+                if (typeof details === 'string') {
+                    return details;
+                }
+                return Object.entries(details)
+                    .map(([key, value]) => `${key}: ${value}`)
+                    .join(', ');
+            } catch (error) {
+                return JSON.stringify(details);
+            }
+        }
+
+        function getUserTypeBadge(userType) {
+            const badgeMap = {
+                'admin': 'bg-danger',
+                'client': 'bg-success'
+            };
+            return badgeMap[userType] || 'bg-secondary';
+        }
+
+        async function viewLogDetails(logId) {
+            const log = allLogs.find(l => l._id === logId);
+            if (!log) return;
+
+            const modal = new bootstrap.Modal(document.getElementById('logDetailsModal'));
+            
+            document.getElementById('logDetailsContent').innerHTML = `
+                <div class="log-details">
+                    <h6><i class="fas fa-info-circle me-2"></i>Log Entry Details</h6>
+                    <table class="table table-sm table-borderless">
+                        <tr><th>Action:</th><td><span class="badge ${getActionBadge(log.action)}">${formatAction(log.action)}</span></td></tr>
+                        <tr><th>User:</th><td>${clientNameMap[log.user_id] || log.user_id}</td></tr>
+                        <tr><th>User Type:</th><td><span class="badge ${getUserTypeBadge(log.user_type)}">${log.user_type}</span></td></tr>
+                        <tr><th>Client ID:</th><td>${log.client_id || 'N/A'}</td></tr>
+                        <tr><th>Website:</th><td>${getWebsiteLink(log)}</td></tr>
+                        <tr><th>Timestamp:</th><td>${new Date(log.timestamp).toLocaleString()}</td></tr>
+                    </table>
+                    
+                    <h6 class="mt-4"><i class="fas fa-list me-2"></i>Details</h6>
+                    <div class="card">
+                        <div class="card-body">
+                            <pre class="mb-0" style="white-space: pre-wrap; font-size: 0.9rem;">${JSON.stringify(log.details, null, 2)}</pre>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            modal.show();
+        }
+
+        function exportLogs() {
+            // Create CSV content
+            let csvContent = "Action,User,User Type,Website,Details,Timestamp\n";
+            
+            filteredLogs.forEach(log => {
+                const action = formatAction(log.action);
+                const user = clientNameMap[log.user_id] || log.user_id;
+                const userType = log.user_type;
+                const website = log.client_id && clientWebsiteMap[log.client_id] ? clientWebsiteMap[log.client_id].website : 'N/A';
+                const details = formatLogDetails(log.details).replace(/"/g, '""');
+                const timestamp = new Date(log.timestamp).toLocaleString();
+                
+                csvContent += `"${action}","${user}","${userType}","${website}","${details}","${timestamp}"\n`;
+            });
+            
+            // Create download link
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('hidden', '');
+            a.setAttribute('href', url);
+            a.setAttribute('download', `system-logs-${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            showNotification('Logs exported successfully!', 'success');
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show`;
+            notification.style.cssText = `
+                position: fixed;
+                top: 80px;
+                right: 20px;
+                z-index: 1000;
+                min-width: 300px;
+            `;
+            notification.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
